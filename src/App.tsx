@@ -31,6 +31,10 @@ export default function App() {
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
+              {/* Convenience Redirects */}
+              <Route path="/home" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/app" element={<Navigate to="/dashboard" replace />} />
+
               {/* Protected App Routes */}
               <Route
                 element={
@@ -41,12 +45,14 @@ export default function App() {
               >
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/gallery" element={<GalleryPage />} />
+                <Route path="/photos" element={<Navigate to="/gallery" replace />} />
                 <Route path="/upload" element={<UploadPage />} />
                 <Route path="/favorites" element={<FavoritesPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/settings" element={<ProfilePage />} />
               </Route>
 
-              {/* Catch-all 404 */}
+              {/* Catch-all 404 Route */}
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </BrowserRouter>

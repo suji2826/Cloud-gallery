@@ -51,7 +51,13 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as any)?.from?.pathname || '/dashboard';
+  const rawFrom = (location.state as any)?.from?.pathname || (location.state as any)?.from;
+  const from =
+    typeof rawFrom === 'string' &&
+    rawFrom.startsWith('/') &&
+    !['/login', '/signup', '/forgot-password'].includes(rawFrom)
+      ? rawFrom
+      : '/dashboard';
   const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
 
   // Redirect if already authenticated
