@@ -16,25 +16,24 @@ import {
  * Firebase Client Configuration Layer
  * Centralized Firebase App & Authentication setup for CloudGallery
  */
-
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyA_DEMO_KEY_CLOUDGALLERY_2026',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'cloudgallery-auth.firebaseapp.com',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'cloudgallery-auth',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'cloudgallery-auth.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '109283746501',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:109283746501:web:a1b2c3d4e5f6g7h8i9j0k1',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyBX2LZkYNnJB_mFawfcEsodISy7j8uySV8',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'cloudgallery-387880832940.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'cloudgallery-387880832940',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'cloudgallery-387880832940.appspot.com',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '387880832940',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:387880832940:web:cloudgallery',
 };
 
-// Initialize Firebase App singleton
+// Initialize Firebase App singleton instance (Structure: initializeApp(firebaseConfig))
 export const firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// Initialize Firebase Authentication
+// Initialize Firebase Authentication using the centralized app instance (Structure: getAuth(firebaseApp))
 export const auth = getAuth(firebaseApp);
 
-// Configure local persistence
+// Configure local session persistence
 setPersistence(auth, browserLocalPersistence).catch((err) => {
-  console.warn('Firebase persistence setup warning:', err);
+  console.warn('Firebase persistence warning:', err);
 });
 
 export {
@@ -46,3 +45,4 @@ export {
   onAuthStateChanged,
 };
 export type { FirebaseUser };
+

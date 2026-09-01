@@ -1,5 +1,5 @@
 export interface PhotoRecord {
-  userId: string; // Partition Key (Cognito sub)
+  userId: string; // Partition Key (Firebase UID)
   photoId: string; // Sort Key (photo-{uuid})
   originalKey: string; // S3 object key in originals bucket: originals/{userId}/{timestamp}_{filename}
   thumbnailKey: string; // S3 object key in thumbnails bucket: thumbnails/{userId}/{timestamp}_{filename}_thumb.jpg

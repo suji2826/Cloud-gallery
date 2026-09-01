@@ -5,7 +5,7 @@ import { UpdatePhotoInput, PhotoRecord } from '../../types';
 /**
  * Lambda 5: updatePhoto
  * Trigger: API Gateway PUT or PATCH /photos/{photoId}
- * Authorizer: Amazon Cognito User Pool JWT
+ * Authorizer: Firebase Authentication ID Token (Bearer JWT)
  * Output: Updates caption, tags, or favorite flag in DynamoDB table
  */
 export const handler = async (event: any) => {

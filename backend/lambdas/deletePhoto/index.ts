@@ -7,7 +7,7 @@ import { PhotoRecord } from '../../types';
 /**
  * Lambda 6: deletePhoto
  * Trigger: API Gateway DELETE /photos/{photoId}
- * Authorizer: Amazon Cognito User Pool JWT
+ * Authorizer: Firebase Authentication ID Token (Bearer JWT)
  * Output: Deletes S3 original binary, S3 thumbnail binary, and DynamoDB metadata item
  */
 export const handler = async (event: any) => {

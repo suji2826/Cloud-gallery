@@ -6,7 +6,7 @@ import { ConfirmUploadInput, PhotoRecord } from '../../types';
 /**
  * Lambda 2: confirmUpload
  * Trigger: API Gateway POST /confirm-upload
- * Authorizer: Amazon Cognito User Pool JWT
+ * Authorizer: Firebase Authentication ID Token (Bearer JWT)
  * Output: Persists photo metadata record to Amazon DynamoDB table
  */
 export const handler = async (event: any) => {
@@ -20,7 +20,7 @@ export const handler = async (event: any) => {
       return errorResponse('objectKey and fileName are required fields', 400);
     }
 
-    // Security verify: Ensure objectKey belongs to the requesting Cognito user sub
+    // Security verify: Ensure objectKey belongs to the requesting Firebase user UID
     if (!objectKey.startsWith(`originals/${userId}/`)) {
       return errorResponse('Forbidden: Object key prefix does not match authenticated user ID', 403);
     }

@@ -8,7 +8,7 @@ const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
 /**
  * Lambda 1: getUploadUrl
  * Trigger: API Gateway POST /upload-url
- * Authorizer: Amazon Cognito User Pool JWT
+ * Authorizer: Firebase Authentication ID Token (Bearer JWT)
  * Output: Pre-Signed S3 PUT URL for direct browser-to-S3 binary transfer
  */
 export const handler = async (event: any) => {

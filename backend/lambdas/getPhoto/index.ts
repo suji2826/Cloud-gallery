@@ -5,7 +5,7 @@ import { PhotoRecord } from '../../types';
 /**
  * Lambda 4: getPhoto
  * Trigger: API Gateway GET /photos/{photoId}
- * Authorizer: Amazon Cognito User Pool JWT
+ * Authorizer: Firebase Authentication ID Token (Bearer JWT)
  * Output: Retrieves single photo item from DynamoDB table
  */
 export const handler = async (event: any) => {

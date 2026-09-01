@@ -96,7 +96,7 @@ export interface CloudArchitectureStatus {
   region: string;
   isMockEmulation: boolean;
   services: {
-    cognito: { status: 'healthy' | 'warning' | 'active'; poolId: string; userCount: number };
+    firebaseAuth: { status: 'healthy' | 'warning' | 'active'; projectId: string; authDomain: string };
     apiGateway: { status: 'healthy' | 'active'; endpoint: string };
     lambda: { status: 'healthy' | 'active'; functionsCount: number };
     s3Originals: { status: 'healthy' | 'active'; bucket: string; objectCount: number };

@@ -114,14 +114,28 @@ const seedInitialPhotos = () => {
 
 seedInitialPhotos();
 
-// Helper to extract user ID
+// Helper to extract Firebase user ID from Authorization Bearer token
 const getUserIdFromAuthHeader = (req: express.Request): string => {
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-    if (token.startsWith('cognito-jwt-')) {
-      const parts = token.split('-');
-      if (parts.length >= 3) return parts[2];
+    const token = authHeader.substring(7).trim();
+    if (token) {
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+          const payloadJson = Buffer.from(payloadBase64, 'base64').toString('utf8');
+          const payload = JSON.parse(payloadJson);
+          const uid = payload.sub || payload.user_id || payload.uid;
+          if (uid) return uid;
+        }
+      } catch {
+        // Continue to fallback
+      }
+      if (token.startsWith('firebase-token-')) {
+        const parts = token.split('-');
+        if (parts.length >= 3) return parts[2];
+      }
     }
   }
   return 'usr-default-demo';
@@ -141,62 +155,8 @@ app.get('/api/health', (req, res) => {
       lambda: 'active',
       s3: 'active',
       dynamoDb: 'active',
-      cognito: 'active',
+      firebaseAuth: 'active',
       cloudFront: 'active',
-    },
-  });
-});
-
-// 2. Authentication (AWS Cognito User Pool simulation)
-app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required' });
-  }
-
-  const userId = `usr-${Buffer.from(email).toString('hex').substring(0, 10)}`;
-  const userName = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
-
-  res.json({
-    user: {
-      id: userId,
-      email,
-      name: userName,
-      createdAt: '2026-08-01T00:00:00Z',
-    },
-    token: `cognito-jwt-${userId}-${Date.now()}`,
-    expiresIn: 3600 * 24 * 7,
-  });
-});
-
-app.post('/api/auth/signup', (req, res) => {
-  const { name, email, password } = req.body;
-  if (!email || !name || !password) {
-    return res.status(400).json({ error: 'Name, email, and password required' });
-  }
-
-  const userId = `usr-${Buffer.from(email).toString('hex').substring(0, 10)}`;
-
-  res.json({
-    user: {
-      id: userId,
-      email,
-      name,
-      createdAt: new Date().toISOString(),
-    },
-    token: `cognito-jwt-${userId}-${Date.now()}`,
-    expiresIn: 3600 * 24 * 7,
-  });
-});
-
-app.get('/api/auth/me', (req, res) => {
-  const userId = getUserIdFromAuthHeader(req);
-  res.json({
-    user: {
-      id: userId,
-      email: 'alex.cloud@cloudgallery.io',
-      name: 'Alex Cloud',
-      createdAt: '2026-08-01T00:00:00Z',
     },
   });
 });

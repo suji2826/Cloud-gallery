@@ -173,24 +173,57 @@ class AuthService {
 
   private formatFirebaseError(err: any): string {
     const code = err?.code || '';
-    switch (code) {
-      case 'auth/email-already-in-use':
-        return 'This email address is already registered. Please sign in instead.';
-      case 'auth/invalid-email':
-        return 'Please enter a valid email address.';
-      case 'auth/user-not-found':
-      case 'auth/wrong-password':
-      case 'auth/invalid-credential':
-        return 'Invalid email or password. Please try again.';
-      case 'auth/weak-password':
-        return 'Password is too weak. Must be at least 6 characters.';
-      case 'auth/too-many-requests':
-        return 'Too many failed attempts. Please wait a moment and try again.';
-      case 'auth/network-request-failed':
-        return 'Network connection failed. Please check your internet connection.';
-      default:
-        return err?.message || 'Authentication operation failed. Please try again.';
+    const msg = (err?.message || '').toLowerCase();
+
+    if (
+      code === 'auth/api-key-not-valid' ||
+      code === 'auth/invalid-api-key' ||
+      code.includes('api-key-not-valid') ||
+      msg.includes('api-key-not-valid') ||
+      msg.includes('api key not valid') ||
+      msg.includes('invalid api key') ||
+      msg.includes('identity toolkit api has not been used')
+    ) {
+      return 'Firebase configuration is invalid. Please check the Firebase project configuration.';
     }
+
+    if (code === 'auth/email-already-in-use' || msg.includes('email-already-in-use')) {
+      return 'An account already exists with this email.';
+    }
+
+    if (
+      code === 'auth/invalid-credential' ||
+      code === 'auth/user-not-found' ||
+      code === 'auth/wrong-password' ||
+      code === 'auth/invalid-login-credentials' ||
+      msg.includes('invalid-credential') ||
+      msg.includes('wrong-password') ||
+      msg.includes('user-not-found')
+    ) {
+      return 'Invalid email or password.';
+    }
+
+    if (code === 'auth/weak-password' || msg.includes('weak-password')) {
+      return 'Password is too weak.';
+    }
+
+    if (code === 'auth/invalid-email' || msg.includes('invalid-email')) {
+      return 'Please enter a valid email address.';
+    }
+
+    if (code === 'auth/too-many-requests' || msg.includes('too-many-requests')) {
+      return 'Too many failed attempts. Please wait a moment and try again.';
+    }
+
+    if (code === 'auth/network-request-failed' || msg.includes('network-request-failed')) {
+      return 'Network connection failed. Please check your internet connection.';
+    }
+
+    if (code === 'auth/operation-not-allowed' || msg.includes('operation-not-allowed')) {
+      return 'Email/Password sign-in is not enabled in the Firebase Console. Please enable it under Firebase Authentication.';
+    }
+
+    return 'Authentication operation failed. Please try again.';
   }
 }
 

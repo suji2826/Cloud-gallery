@@ -10,8 +10,8 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600 dark:text-indigo-400" />
-        <p className="text-xs text-slate-500 font-medium">Verifying AWS Cognito Session...</p>
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400" />
+        <p className="text-xs text-slate-500 font-medium">Verifying Firebase Authentication Session...</p>
       </div>
     );
   }

@@ -5,7 +5,7 @@ import { PhotoRecord } from '../../types';
 /**
  * Lambda 8: getStats
  * Trigger: API Gateway GET /stats
- * Authorizer: Amazon Cognito User Pool JWT
+ * Authorizer: Firebase Authentication ID Token (Bearer JWT)
  * Output: Aggregates photo count, S3 storage used, favorite counts, and quota
  */
 export const handler = async (event: any) => {

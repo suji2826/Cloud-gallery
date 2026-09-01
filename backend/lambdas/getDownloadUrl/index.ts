@@ -6,7 +6,7 @@ import { PhotoRecord } from '../../types';
 /**
  * Lambda 7: getDownloadUrl
  * Trigger: API Gateway POST or GET /photos/{photoId}/download-url
- * Authorizer: Amazon Cognito User Pool JWT
+ * Authorizer: Firebase Authentication ID Token (Bearer JWT)
  * Output: Generates temporary S3 Pre-Signed GET URL with Content-Disposition attachment header
  */
 export const handler = async (event: any) => {
