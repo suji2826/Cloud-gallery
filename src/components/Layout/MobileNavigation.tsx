@@ -10,8 +10,12 @@ import {
   X,
   CloudLightning,
   Layers,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { AnimatePresence, motion } from 'motion/react';
 
 export interface MobileNavigationProps {
@@ -26,6 +30,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   onOpenCloudInspector,
 }) => {
   const { user, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   const navItems = [
@@ -106,7 +111,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                 );
               })}
 
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -118,6 +123,51 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                   <Layers className="w-5 h-5" />
                   <span>Inspect Cloud Architecture</span>
                 </button>
+
+                {/* Theme Selector */}
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-2">
+                  <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    Interface Theme
+                  </span>
+                  <div className="grid grid-cols-3 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setTheme('light')}
+                      className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                        theme === 'light'
+                          ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                    >
+                      <Sun className="w-3.5 h-3.5" />
+                      <span>Light</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTheme('dark')}
+                      className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                        theme === 'dark'
+                          ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                    >
+                      <Moon className="w-3.5 h-3.5" />
+                      <span>Dark</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTheme('system')}
+                      className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                        theme === 'system'
+                          ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                    >
+                      <Monitor className="w-3.5 h-3.5" />
+                      <span>Auto</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 

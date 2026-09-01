@@ -9,8 +9,12 @@ import {
   LogOut,
   Layers,
   CloudLightning,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { StorageStats } from '../../types';
 import { formatBytes } from '../../utils/formatters';
 
@@ -26,6 +30,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenCloudInspector,
 }) => {
   const { user, logout } = useAuth();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   const navItems = [
@@ -42,8 +47,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const usedBytes = stats?.totalSizeBytes || 0;
-  const quotaBytes = stats?.quotaLimitBytes || 5 * 1024 * 1024 * 1024; // 5 GB default quota
-  const percentage = Math.min(100, Math.round((usedBytes / quotaBytes) * 100));
+  const quotaBytes = stats?.maxQuotaBytes || 10 * 1024 * 1024 * 1024; // 10 GB default quota
+  const percentage = stats?.quotaPercentage ?? Math.min(100, Math.round((usedBytes / quotaBytes) * 100));
 
   return (
     <aside
@@ -102,6 +107,54 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <p className="text-[10px] text-slate-400 mt-1">S3 • Lambda • DynamoDB</p>
             </div>
           </button>
+        </div>
+
+        {/* Theme Switcher in Sidebar */}
+        <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+          <p className="px-2 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+            Theme Mode
+          </p>
+          <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setTheme('light')}
+              className={`flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                theme === 'light'
+                  ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+              title="Light Mode"
+            >
+              <Sun className="w-3.5 h-3.5" />
+              <span>Light</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTheme('dark')}
+              className={`flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                theme === 'dark'
+                  ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+              title="Dark Mode"
+            >
+              <Moon className="w-3.5 h-3.5" />
+              <span>Dark</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTheme('system')}
+              className={`flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                theme === 'system'
+                  ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+              title="System Default"
+            >
+              <Monitor className="w-3.5 h-3.5" />
+              <span>Auto</span>
+            </button>
+          </div>
         </div>
       </nav>
 
