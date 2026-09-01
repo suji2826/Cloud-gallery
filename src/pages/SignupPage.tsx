@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { CloudLightning, ShieldCheck, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
+import { CloudLightning, ShieldCheck, AlertCircle, Loader2, CheckCircle2, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { GoogleIcon } from './LoginPage';
@@ -9,7 +9,7 @@ export const SignupPage: React.FC = () => {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const { signInWithGoogle, isAuthenticated } = useAuth();
+  const { signInWithGoogle, signInWithDemo, isAuthenticated } = useAuth();
   const { success, error } = useToast();
   const navigate = useNavigate();
 
@@ -33,6 +33,19 @@ export const SignupPage: React.FC = () => {
       const msg = err.message || 'Unable to sign in. Please try again.';
       setErrorMessage(msg);
       error('Authentication Error', msg);
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  const handleDemoSignIn = async () => {
+    setIsSigningIn(true);
+    try {
+      await signInWithDemo('New User');
+      success('Welcome to CloudGallery!', 'Started in Quick Test Mode.');
+      navigate('/dashboard', { replace: true });
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to start demo session.');
     } finally {
       setIsSigningIn(false);
     }
@@ -101,7 +114,7 @@ export const SignupPage: React.FC = () => {
               {isSigningIn ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin text-blue-600 dark:text-blue-400" />
-                  <span>Signing in...</span>
+                  <span>Signing in with Google...</span>
                 </>
               ) : (
                 <>
@@ -111,9 +124,14 @@ export const SignupPage: React.FC = () => {
               )}
             </button>
 
-            <p className="text-center text-xs text-slate-500 dark:text-slate-400">
-              Your photos are securely stored using cloud infrastructure.
-            </p>
+            <button
+              type="button"
+              onClick={handleDemoSignIn}
+              className="w-full py-2 text-center text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center justify-center gap-1 cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Quick Test Access</span>
+            </button>
           </div>
 
           {/* Already have an account */}

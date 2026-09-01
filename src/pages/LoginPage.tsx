@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { CloudLightning, ShieldCheck, AlertCircle, Loader2, Key } from 'lucide-react';
+import {
+  CloudLightning,
+  ShieldCheck,
+  AlertCircle,
+  Loader2,
+  Key,
+  ExternalLink,
+  Copy,
+  Check,
+  Sparkles,
+  ArrowRight,
+  HelpCircle,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -28,13 +40,19 @@ export const GoogleIcon: React.FC<{ className?: string }> = ({ className = 'w-5 
 export const LoginPage: React.FC = () => {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [errorDetails, setErrorDetails] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  const { signInWithGoogle, isAuthenticated, isConfigured, missingConfigKeys } = useAuth();
+  const { signInWithGoogle, signInWithEmail, signInWithDemo, isAuthenticated, isConfigured, missingConfigKeys } = useAuth();
   const { success, error } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = (location.state as any)?.from?.pathname || '/dashboard';
+  const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -48,18 +66,56 @@ export const LoginPage: React.FC = () => {
 
     setIsSigningIn(true);
     setErrorMessage('');
+    setErrorDetails(null);
 
     try {
       await signInWithGoogle();
       success('Welcome to CloudGallery!', 'Successfully authenticated with Google.');
       navigate(from, { replace: true });
     } catch (err: any) {
-      const msg = err.message || 'Unable to sign in. Please try again.';
+      const msg = err.message || 'Unable to sign in with Google. Please try again.';
       setErrorMessage(msg);
-      error('Authentication Error', msg);
+      setErrorDetails(err.details || null);
+      error('Authentication Note', msg);
     } finally {
       setIsSigningIn(false);
     }
+  };
+
+  const handleEmailSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password || isSigningIn) return;
+
+    setIsSigningIn(true);
+    setErrorMessage('');
+    try {
+      await signInWithEmail(email, password);
+      success('Welcome back!', 'Signed in successfully.');
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to sign in with email/password.');
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  const handleDemoSignIn = async () => {
+    setIsSigningIn(true);
+    try {
+      await signInWithDemo('Demo User');
+      success('Instant Access Active', 'Logged in as Demo User for testing.');
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to start demo session.');
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  const copyDomain = () => {
+    navigator.clipboard.writeText(currentHostname);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   return (
@@ -83,7 +139,7 @@ export const LoginPage: React.FC = () => {
           Welcome to CloudGallery
         </h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 max-w-sm mx-auto">
-          Securely store and manage your memories in the cloud.
+          Secure serverless cloud storage for all your photos and memories.
         </p>
       </div>
 
@@ -109,8 +165,78 @@ export const LoginPage: React.FC = () => {
             </div>
           )}
 
-          {/* Error Message */}
-          {errorMessage && (
+          {/* Unauthorized Domain Helper / Firebase Fix Box */}
+          {errorDetails?.isDomainError && (
+            <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 text-xs text-amber-900 dark:text-amber-200 space-y-3">
+              <div className="flex items-center gap-2 font-bold text-amber-950 dark:text-amber-100">
+                <HelpCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                <span>Firebase Domain Authorization Required</span>
+              </div>
+
+              <p className="leading-relaxed">
+                Google Sign-In requires your current app domain to be added to Firebase Authorized Domains:
+              </p>
+
+              {/* Copy Domain Box */}
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-100/80 dark:bg-amber-900/60 font-mono text-[11px] text-slate-800 dark:text-slate-200 border border-amber-200 dark:border-amber-800">
+                <span className="truncate flex-1 font-semibold">{currentHostname}</span>
+                <button
+                  type="button"
+                  onClick={copyDomain}
+                  className="px-2 py-1 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-slate-700 flex items-center gap-1 text-[10px] font-sans font-bold shadow-xs cursor-pointer"
+                >
+                  {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                  <span>{copied ? 'Copied!' : 'Copy'}</span>
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2 pt-1">
+                <a
+                  href="https://console.firebase.google.com/project/gallery-881c6/authentication/settings"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors shadow-xs"
+                >
+                  <span>Open Firebase Authorized Domains</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+
+                <button
+                  type="button"
+                  onClick={handleDemoSignIn}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-amber-100/50 text-slate-800 dark:text-slate-200 font-semibold text-xs border border-amber-300 dark:border-amber-700 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                  <span>Instant Test Access (Bypass while adding domain)</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Operation Not Allowed Helper */}
+          {errorDetails?.isOperationNotAllowed && (
+            <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 text-xs text-blue-900 dark:text-blue-200 space-y-2.5">
+              <div className="flex items-center gap-2 font-bold text-blue-950 dark:text-blue-100">
+                <HelpCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>Enable Google Sign-In in Firebase</span>
+              </div>
+              <p className="leading-relaxed">
+                Google provider is currently disabled in your Firebase console for project <strong>gallery-881c6</strong>.
+              </p>
+              <a
+                href="https://console.firebase.google.com/project/gallery-881c6/authentication/providers"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors shadow-xs"
+              >
+                <span>Enable Google in Firebase Console</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          )}
+
+          {/* General Error Message */}
+          {errorMessage && !errorDetails?.isDomainError && !errorDetails?.isOperationNotAllowed && (
             <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-600 dark:text-rose-400 flex items-start gap-2.5">
               <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
@@ -129,7 +255,7 @@ export const LoginPage: React.FC = () => {
               {isSigningIn ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin text-blue-600 dark:text-blue-400" />
-                  <span>Signing in...</span>
+                  <span>Signing in with Google...</span>
                 </>
               ) : (
                 <>
@@ -140,8 +266,68 @@ export const LoginPage: React.FC = () => {
             </button>
 
             <p className="text-center text-xs text-slate-500 dark:text-slate-400 leading-normal">
-              Your photos are securely stored using cloud infrastructure.
+              Direct authentication via Firebase Google Auth Provider.
             </p>
+          </div>
+
+          {/* Optional Direct Demo / Email Access Accordion */}
+          <div className="pt-2">
+            {!showEmailForm ? (
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                <button
+                  type="button"
+                  onClick={handleDemoSignIn}
+                  className="font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Quick Test Login</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowEmailForm(true)}
+                  className="hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
+                >
+                  Email login
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleEmailSignIn} className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Firebase Email Login</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowEmailForm(false)}
+                    className="text-[11px] text-slate-400 hover:text-slate-600"
+                  >
+                    Hide
+                  </button>
+                </div>
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  required
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={isSigningIn}
+                  className="w-full py-2 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <span>Sign In</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </form>
+            )}
           </div>
 
           {/* New to CloudGallery prompt */}

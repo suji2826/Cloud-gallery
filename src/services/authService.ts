@@ -2,6 +2,8 @@ import {
   auth,
   googleProvider,
   signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   isFirebaseConfigured,
@@ -12,6 +14,15 @@ import { User } from '../types';
 export interface AuthResponse {
   user: User;
   token: string;
+}
+
+export interface AuthErrorDetails {
+  message: string;
+  code?: string;
+  isDomainError?: boolean;
+  isPopupBlocked?: boolean;
+  isOperationNotAllowed?: boolean;
+  suggestedDomain?: string;
 }
 
 export const TOKEN_STORAGE_KEY = 'cloudgallery_firebase_token';
@@ -40,7 +51,7 @@ class AuthService {
    */
   async signInWithGoogle(): Promise<AuthResponse> {
     if (!isFirebaseConfigured() || !auth) {
-      throw new Error('Authentication configuration is incomplete.');
+      throw new Error('Firebase configuration is incomplete. Please check your environment variables.');
     }
 
     try {
@@ -53,10 +64,46 @@ class AuthService {
       return { user, token };
     } catch (err: any) {
       if (import.meta.env.DEV) {
-        console.error('Firebase Google Sign-In error details:', err);
+        console.error('Firebase Google Sign-In error:', err);
       }
-      throw new Error(this.formatFirebaseError(err));
+      const parsedError = this.parseFirebaseError(err);
+      const customErr: any = new Error(parsedError.message);
+      customErr.details = parsedError;
+      throw customErr;
     }
+  }
+
+  /**
+   * Alternative: Sign In with Email & Password
+   */
+  async signInWithEmail(email: string, pass: string): Promise<AuthResponse> {
+    if (!auth) throw new Error('Firebase is not initialized.');
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, pass);
+      const token = await cred.user.getIdToken();
+      const user = mapFirebaseUser(cred.user);
+      this.saveSession(token, user);
+      return { user, token };
+    } catch (err: any) {
+      const parsed = this.parseFirebaseError(err);
+      throw new Error(parsed.message);
+    }
+  }
+
+  /**
+   * Quick Demo / Guest Access for instant preview testing
+   */
+  async signInWithDemo(demoName = 'Test User'): Promise<AuthResponse> {
+    const demoUser: User = {
+      id: 'demo-user-' + Math.random().toString(36).substring(2, 9),
+      email: 'demo@cloudgallery.internal',
+      name: demoName,
+      createdAt: new Date().toISOString(),
+      avatarUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80`,
+    };
+    const mockToken = 'mock-firebase-token-' + Date.now();
+    this.saveSession(mockToken, demoUser);
+    return { user: demoUser, token: mockToken };
   }
 
   /**
@@ -120,8 +167,14 @@ class AuthService {
           callback(null);
         }
       } else {
-        this.clearSession();
-        callback(null);
+        const stored = this.getStoredUser();
+        // If demo session is stored, preserve it
+        if (stored && stored.id.startsWith('demo-user-')) {
+          callback(stored);
+        } else {
+          this.clearSession();
+          callback(null);
+        }
       }
     });
   }
@@ -151,16 +204,41 @@ class AuthService {
     sessionStorage.removeItem(USER_STORAGE_KEY);
   }
 
-  private formatFirebaseError(err: any): string {
+  parseFirebaseError(err: any): AuthErrorDetails {
     const code = err?.code || '';
     const msg = (err?.message || '').toLowerCase();
+    const currentDomain = typeof window !== 'undefined' ? window.location.hostname : '';
 
     if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
-      return 'Sign-in was cancelled.';
+      return {
+        message: 'Google Sign-In popup was closed before completing.',
+        code,
+      };
     }
 
     if (code === 'auth/popup-blocked') {
-      return 'Please allow popups for Google Sign-In.';
+      return {
+        message: 'Popup window was blocked by the browser. Please allow popups or open the app in a new tab.',
+        code,
+        isPopupBlocked: true,
+      };
+    }
+
+    if (code === 'auth/unauthorized-domain' || msg.includes('unauthorized-domain') || msg.includes('unauthorized domain')) {
+      return {
+        message: `Domain '${currentDomain}' is not authorized in your Firebase Console.`,
+        code: 'auth/unauthorized-domain',
+        isDomainError: true,
+        suggestedDomain: currentDomain,
+      };
+    }
+
+    if (code === 'auth/operation-not-allowed' || msg.includes('operation-not-allowed')) {
+      return {
+        message: 'Google Sign-In is not enabled in Firebase Console. Go to Authentication > Sign-in method and enable Google.',
+        code: 'auth/operation-not-allowed',
+        isOperationNotAllowed: true,
+      };
     }
 
     if (
@@ -169,25 +247,25 @@ class AuthService {
       code === 'auth/invalid-app-credential' ||
       code === 'auth/configuration-not-found' ||
       msg.includes('api-key-not-valid') ||
-      msg.includes('api key not valid') ||
       msg.includes('invalid api key')
     ) {
-      return 'Authentication configuration is incomplete.';
-    }
-
-    if (code === 'auth/unauthorized-domain' || msg.includes('unauthorized-domain')) {
-      return 'This domain is not authorized in Firebase Console. Please add it under Authentication > Settings > Authorized domains.';
-    }
-
-    if (code === 'auth/operation-not-allowed' || msg.includes('operation-not-allowed')) {
-      return 'Google Sign-In is not enabled in the Firebase Console. Please enable Google under Authentication > Sign-in method.';
+      return {
+        message: 'Firebase API Key is invalid or not found. Please verify your Firebase project credentials.',
+        code,
+      };
     }
 
     if (code === 'auth/network-request-failed' || msg.includes('network')) {
-      return 'Network connection failed. Please check your internet connection.';
+      return {
+        message: 'Network error connecting to Firebase. Please check your internet connection.',
+        code,
+      };
     }
 
-    return 'Unable to sign in. Please try again.';
+    return {
+      message: err?.message || 'Failed to authenticate with Google. Please try again.',
+      code,
+    };
   }
 }
 

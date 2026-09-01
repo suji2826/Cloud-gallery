@@ -3,6 +3,11 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInAnonymously,
   signOut,
   onAuthStateChanged,
   User as FirebaseUser,
@@ -22,6 +27,7 @@ export const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'gallery-881c6.firebasestorage.app',
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '313209083062',
   appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:313209083062:web:67e78be129612f62240217',
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-JHBCPV5YCD',
 };
 
 /**
@@ -75,6 +81,11 @@ googleProvider.setCustomParameters({
 export {
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInAnonymously,
   signOut,
   onAuthStateChanged,
 };

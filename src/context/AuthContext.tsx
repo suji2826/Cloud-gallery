@@ -10,6 +10,8 @@ interface AuthContextType {
   isConfigured: boolean;
   missingConfigKeys: string[];
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, pass: string) => Promise<void>;
+  signInWithDemo: (name?: string) => Promise<void>;
   logout: () => Promise<void>;
   getIdToken: (forceRefresh?: boolean) => Promise<string | null>;
 }
@@ -44,6 +46,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithEmail = async (email: string, pass: string) => {
+    setIsLoading(true);
+    try {
+      const res = await authService.signInWithEmail(email, pass);
+      setUser(res.user);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signInWithDemo = async (name?: string) => {
+    setIsLoading(true);
+    try {
+      const res = await authService.signInWithDemo(name);
+      setUser(res.user);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async () => {
     await authService.logout();
     setUser(null);
@@ -62,6 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isConfigured,
         missingConfigKeys,
         signInWithGoogle,
+        signInWithEmail,
+        signInWithDemo,
         logout,
         getIdToken,
       }}
