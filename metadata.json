@@ -1,0 +1,6 @@
+{
+  "name": "CloudGallery",
+  "description": "Serverless cloud photo gallery with secure S3 storage, Lambda thumbnail generation, DynamoDB metadata, and CloudFront delivery.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
