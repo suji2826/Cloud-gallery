@@ -72,15 +72,15 @@ export const ProfilePage: React.FC = () => {
             </div>
           </div>
 
-          <CloudBadge type="cognito" size="md" />
+          <CloudBadge type="firebase" size="md" />
         </div>
 
         {/* Account Details Specs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-1">
-            <span className="text-slate-400 font-medium">Cognito User ID</span>
+            <span className="text-slate-400 font-medium">Firebase User ID (UID)</span>
             <p className="font-mono font-bold text-slate-900 dark:text-slate-100 truncate">
-              {user?.id || 'cognito-sub-12345'}
+              {user?.id || 'firebase-uid-12345'}
             </p>
           </div>
 
@@ -145,6 +145,10 @@ export const ProfilePage: React.FC = () => {
 
         <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
           <div className="py-2.5 flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Auth Provider</span>
+            <span className="font-mono text-slate-800 dark:text-slate-200">Firebase Authentication</span>
+          </div>
+          <div className="py-2.5 flex items-center justify-between">
             <span className="text-slate-500 dark:text-slate-400 font-medium">Originals S3 Bucket</span>
             <span className="font-mono text-slate-800 dark:text-slate-200">{AWS_CONFIG.s3.originalsBucket}</span>
           </div>
@@ -155,10 +159,6 @@ export const ProfilePage: React.FC = () => {
           <div className="py-2.5 flex items-center justify-between">
             <span className="text-slate-500 dark:text-slate-400 font-medium">DynamoDB Metadata Table</span>
             <span className="font-mono text-slate-800 dark:text-slate-200">{AWS_CONFIG.dynamodb.tableName}</span>
-          </div>
-          <div className="py-2.5 flex items-center justify-between">
-            <span className="text-slate-500 dark:text-slate-400 font-medium">Cognito User Pool ID</span>
-            <span className="font-mono text-slate-800 dark:text-slate-200">{AWS_CONFIG.cognito.userPoolId}</span>
           </div>
           <div className="py-2.5 flex items-center justify-between">
             <span className="text-slate-500 dark:text-slate-400 font-medium">CloudFront Distribution</span>
@@ -172,7 +172,7 @@ export const ProfilePage: React.FC = () => {
         <div>
           <h4 className="text-sm font-bold text-rose-900 dark:text-rose-200">Sign Out</h4>
           <p className="text-xs text-rose-700/80 dark:text-rose-400/80">
-            Terminate your active Cognito session and return to the login screen.
+            Terminate your active session and return to the login screen.
           </p>
         </div>
         <Button

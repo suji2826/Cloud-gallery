@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { CloudLightning, Lock, Mail, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { CloudLightning, Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
 import { Input } from '../components/UI/Input';
 import { Button } from '../components/UI/Button';
 import { useAuth } from '../context/AuthContext';
@@ -32,7 +32,7 @@ export const LoginPage: React.FC = () => {
 
     try {
       await login({ email, password, rememberMe });
-      success('Welcome back!', 'Successfully signed in with AWS Cognito.');
+      success('Welcome back!', 'Successfully signed in to CloudGallery.');
       navigate(from, { replace: true });
     } catch (err: any) {
       const msg = err.message || 'Login failed. Please check your credentials.';
@@ -63,12 +63,12 @@ export const LoginPage: React.FC = () => {
           Sign in to your account
         </h2>
         <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-          Or{' '}
+          Don&apos;t have an account?{' '}
           <Link
             to="/signup"
             className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
           >
-            create a new cloud account
+            Create an account
           </Link>
         </p>
       </div>
@@ -111,16 +111,15 @@ export const LoginPage: React.FC = () => {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
                 />
-                <span className="text-slate-600 dark:text-slate-400">Remember session</span>
+                <span className="text-slate-600 dark:text-slate-400">Remember me</span>
               </label>
 
-              <button
-                type="button"
-                onClick={handleQuickDemoFill}
-                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+              <Link
+                to="/forgot-password"
+                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
               >
-                Auto-fill Demo Credentials
-              </button>
+                Forgot password?
+              </Link>
             </div>
 
             <Button
@@ -133,12 +132,22 @@ export const LoginPage: React.FC = () => {
             >
               Sign In
             </Button>
+
+            <div className="pt-1 text-center">
+              <button
+                type="button"
+                onClick={handleQuickDemoFill}
+                className="text-xs text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer underline underline-offset-2"
+              >
+                Auto-fill demo credentials
+              </button>
+            </div>
           </form>
 
           {/* Security Badge */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span>AWS Cognito Authenticated Session</span>
+            <span>Secured by Firebase Authentication</span>
           </div>
         </div>
       </div>

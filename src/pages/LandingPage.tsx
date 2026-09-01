@@ -117,8 +117,8 @@ export const LandingPage: React.FC = () => {
 
         {/* Hero Subtitle */}
         <p className="mt-6 text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-          Upload, organize, and access your memories from anywhere with CloudGallery. Built on AWS
-          Cognito, S3 Pre-Signed URLs, Lambda thumbnail engines, DynamoDB metadata, and CloudFront.
+          Upload, organize, and access your memories from anywhere with CloudGallery. Built with Firebase
+          Authentication, S3 Pre-Signed URLs, Lambda thumbnail engines, DynamoDB metadata, and CloudFront.
         </p>
 
         {/* CTA Buttons */}
@@ -165,7 +165,7 @@ export const LandingPage: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
             {[
               { name: 'React Frontend', desc: 'Pre-Signed PUT', icon: Smartphone, color: 'text-blue-600' },
-              { name: 'AWS Cognito', desc: 'JWT User Pools', icon: ShieldCheck, color: 'text-emerald-600' },
+              { name: 'Firebase Auth', desc: 'Secure ID Tokens', icon: ShieldCheck, color: 'text-emerald-600' },
               { name: 'API Gateway', desc: 'Protected Routes', icon: Zap, color: 'text-amber-500' },
               { name: 'AWS Lambda', desc: 'Sharp Thumbnails', icon: Layers, color: 'text-orange-500' },
               { name: 'Amazon S3', desc: 'Private & Thumbs', icon: HardDrive, color: 'text-blue-700' },

@@ -1,5 +1,14 @@
+import {
+  auth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  sendPasswordResetEmail,
+  updateProfile,
+  onAuthStateChanged,
+  FirebaseUser,
+} from '../lib/firebase';
 import { User } from '../types';
-import { apiRequest, TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from './apiService';
 
 export interface SignUpParams {
   name: string;
@@ -16,61 +25,125 @@ export interface LoginParams {
 export interface AuthResponse {
   user: User;
   token: string;
-  refreshToken?: string;
-  expiresIn?: number;
+}
+
+export const TOKEN_STORAGE_KEY = 'cloudgallery_firebase_token';
+export const USER_STORAGE_KEY = 'cloudgallery_firebase_user';
+
+export function mapFirebaseUser(fbUser: FirebaseUser): User {
+  return {
+    id: fbUser.uid,
+    email: fbUser.email || '',
+    name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Cloud User',
+    createdAt: fbUser.metadata?.creationTime || new Date().toISOString(),
+    avatarUrl: fbUser.photoURL || undefined,
+  };
 }
 
 class AuthService {
+  private currentToken: string | null = null;
+
+  constructor() {
+    this.currentToken = localStorage.getItem(TOKEN_STORAGE_KEY) || sessionStorage.getItem(TOKEN_STORAGE_KEY);
+  }
+
+  /**
+   * Firebase Email/Password Sign Up
+   */
   async signUp(params: SignUpParams): Promise<AuthResponse> {
-    const data = await apiRequest<AuthResponse>('/auth/signup', {
-      method: 'POST',
-      body: JSON.stringify(params),
-    });
-
-    this.saveSession(data.token, data.user, true);
-    return data;
-  }
-
-  async login(params: LoginParams): Promise<AuthResponse> {
-    const data = await apiRequest<AuthResponse>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(params),
-    });
-
-    this.saveSession(data.token, data.user, params.rememberMe ?? true);
-    return data;
-  }
-
-  async getCurrentUser(): Promise<User | null> {
-    const token = this.getToken();
-    if (!token) return null;
-
     try {
-      const data = await apiRequest<{ user: User }>('/auth/me');
-      if (data?.user) {
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
-        return data.user;
+      const userCredential = await createUserWithEmailAndPassword(auth, params.email, params.password);
+      
+      if (params.name && userCredential.user) {
+        await updateProfile(userCredential.user, { displayName: params.name });
       }
-      return null;
-    } catch {
-      // If token expired or invalid, clear session
-      this.logout();
-      return null;
+
+      const token = await userCredential.user.getIdToken(true);
+      const user = mapFirebaseUser(userCredential.user);
+      
+      this.saveSession(token, user, true);
+      return { user, token };
+    } catch (err: any) {
+      throw new Error(this.formatFirebaseError(err));
     }
   }
 
-  logout(): void {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-    localStorage.removeItem(USER_STORAGE_KEY);
-    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
-    sessionStorage.removeItem(USER_STORAGE_KEY);
-    
-    // Fire background logout request
-    apiRequest('/auth/logout', { method: 'POST' }).catch(() => {});
+  /**
+   * Firebase Email/Password Login
+   */
+  async login(params: LoginParams): Promise<AuthResponse> {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, params.email, params.password);
+      const token = await userCredential.user.getIdToken(true);
+      const user = mapFirebaseUser(userCredential.user);
+      
+      this.saveSession(token, user, params.rememberMe ?? true);
+      return { user, token };
+    } catch (err: any) {
+      throw new Error(this.formatFirebaseError(err));
+    }
   }
 
-  getToken(): string | null {
-    return localStorage.getItem(TOKEN_STORAGE_KEY) || sessionStorage.getItem(TOKEN_STORAGE_KEY);
+  /**
+   * Firebase Password Reset
+   */
+  async sendPasswordReset(email: string): Promise<void> {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (err: any) {
+      throw new Error(this.formatFirebaseError(err));
+    }
+  }
+
+  /**
+   * Firebase Sign Out
+   */
+  async logout(): Promise<void> {
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.warn('Firebase signOut warning:', err);
+    } finally {
+      this.clearSession();
+    }
+  }
+
+  /**
+   * Get fresh Firebase ID Token
+   */
+  async getIdToken(forceRefresh = false): Promise<string | null> {
+    if (auth.currentUser) {
+      try {
+        const token = await auth.currentUser.getIdToken(forceRefresh);
+        this.currentToken = token;
+        localStorage.setItem(TOKEN_STORAGE_KEY, token);
+        return token;
+      } catch (err) {
+        console.warn('Failed to refresh Firebase ID token:', err);
+      }
+    }
+    return this.currentToken || localStorage.getItem(TOKEN_STORAGE_KEY) || sessionStorage.getItem(TOKEN_STORAGE_KEY);
+  }
+
+  /**
+   * Listen to Firebase Auth state changes
+   */
+  onAuthStateChange(callback: (user: User | null) => void): () => void {
+    return onAuthStateChanged(auth, async (fbUser) => {
+      if (fbUser) {
+        try {
+          const token = await fbUser.getIdToken();
+          const mapped = mapFirebaseUser(fbUser);
+          this.saveSession(token, mapped, true);
+          callback(mapped);
+        } catch {
+          callback(null);
+        }
+      } else {
+        this.clearSession();
+        callback(null);
+      }
+    });
   }
 
   getStoredUser(): User | null {
@@ -84,10 +157,42 @@ class AuthService {
   }
 
   private saveSession(token: string, user: User, remember: boolean): void {
+    this.currentToken = token;
     const storage = remember ? localStorage : sessionStorage;
     storage.setItem(TOKEN_STORAGE_KEY, token);
     storage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
   }
+
+  private clearSession(): void {
+    this.currentToken = null;
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(USER_STORAGE_KEY);
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(USER_STORAGE_KEY);
+  }
+
+  private formatFirebaseError(err: any): string {
+    const code = err?.code || '';
+    switch (code) {
+      case 'auth/email-already-in-use':
+        return 'This email address is already registered. Please sign in instead.';
+      case 'auth/invalid-email':
+        return 'Please enter a valid email address.';
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':
+        return 'Invalid email or password. Please try again.';
+      case 'auth/weak-password':
+        return 'Password is too weak. Must be at least 6 characters.';
+      case 'auth/too-many-requests':
+        return 'Too many failed attempts. Please wait a moment and try again.';
+      case 'auth/network-request-failed':
+        return 'Network connection failed. Please check your internet connection.';
+      default:
+        return err?.message || 'Authentication operation failed. Please try again.';
+    }
+  }
 }
 
 export const authService = new AuthService();
+

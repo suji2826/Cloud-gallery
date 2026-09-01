@@ -19,7 +19,7 @@ export const docClient = DynamoDBDocumentClient.from(ddbClient, {
   },
 });
 
-export const PHOTOS_TABLE = process.env.PHOTOS_TABLE || 'cloudgallery-photos-metadata';
+export const PHOTOS_TABLE = process.env.PHOTOS_TABLE || 'CloudGalleryPhotos';
 
 export {
   PutCommand,

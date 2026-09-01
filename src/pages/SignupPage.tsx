@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CloudLightning, Lock, Mail, User, ArrowRight, ShieldCheck, Check, X } from 'lucide-react';
+import { CloudLightning, Lock, Mail, User, ArrowRight, ShieldCheck } from 'lucide-react';
 import { Input } from '../components/UI/Input';
 import { Button } from '../components/UI/Button';
 import { useAuth } from '../context/AuthContext';
@@ -19,12 +19,11 @@ export const SignupPage: React.FC = () => {
   const navigate = useNavigate();
 
   // Password strength calculations
-  const hasMinLength = password.length >= 8;
+  const hasMinLength = password.length >= 6;
   const hasNumber = /\d/.test(password);
-  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
   const hasUppercase = /[A-Z]/.test(password);
 
-  const strengthScore = [hasMinLength, hasNumber, hasSpecial, hasUppercase].filter(Boolean).length;
+  const strengthScore = [hasMinLength, hasNumber, hasUppercase].filter(Boolean).length;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,8 +37,8 @@ export const SignupPage: React.FC = () => {
       return;
     }
 
-    if (!hasMinLength) {
-      setErrorMsg('Password must be at least 8 characters long.');
+    if (password.length < 6) {
+      setErrorMsg('Password must be at least 6 characters long.');
       return;
     }
 
@@ -48,7 +47,7 @@ export const SignupPage: React.FC = () => {
 
     try {
       await signUp({ name, email, password });
-      success('Account created!', 'Welcome to CloudGallery. Your Cognito session is active.');
+      success('Account created!', 'Welcome to CloudGallery! Your account is ready.');
       navigate('/dashboard');
     } catch (err: any) {
       const msg = err.message || 'Sign up failed. Please try again.';
@@ -71,7 +70,7 @@ export const SignupPage: React.FC = () => {
           </span>
         </Link>
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Create your cloud account
+          Create your CloudGallery account
         </h2>
         <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
           Already have an account?{' '}
@@ -79,7 +78,7 @@ export const SignupPage: React.FC = () => {
             to="/login"
             className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
           >
-            Sign in
+            Sign In
           </Link>
         </p>
       </div>
@@ -126,52 +125,38 @@ export const SignupPage: React.FC = () => {
 
             {/* Password Strength Indicator */}
             {password && (
-              <div className="space-y-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 text-xs">
+              <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-600 dark:text-slate-400">
+                  <span className="font-semibold text-slate-600 dark:text-slate-400 text-[11px]">
                     Password Strength:
                   </span>
                   <span
-                    className={`font-bold ${
+                    className={`font-bold text-[11px] ${
                       strengthScore <= 1
                         ? 'text-rose-500'
-                        : strengthScore <= 3
+                        : strengthScore === 2
                         ? 'text-amber-500'
                         : 'text-emerald-500'
                     }`}
                   >
-                    {strengthScore <= 1 ? 'Weak' : strengthScore <= 3 ? 'Medium' : 'Strong'}
+                    {strengthScore <= 1 ? 'Weak' : strengthScore === 2 ? 'Medium' : 'Strong'}
                   </span>
                 </div>
-                <div className="grid grid-cols-4 gap-1 h-1">
-                  {[1, 2, 3, 4].map((step) => (
+                <div className="grid grid-cols-3 gap-1 h-1">
+                  {[1, 2, 3].map((step) => (
                     <div
                       key={step}
                       className={`h-full rounded-full transition-all duration-300 ${
                         step <= strengthScore
                           ? strengthScore <= 1
                             ? 'bg-rose-500'
-                            : strengthScore <= 3
+                            : strengthScore === 2
                             ? 'bg-amber-500'
                             : 'bg-emerald-500'
                           : 'bg-slate-200 dark:bg-slate-700'
                       }`}
                     />
                   ))}
-                </div>
-                <div className="grid grid-cols-2 gap-1 pt-1 text-[11px] text-slate-500">
-                  <span className={hasMinLength ? 'text-emerald-500' : ''}>
-                    {hasMinLength ? '✓' : '•'} 8+ characters
-                  </span>
-                  <span className={hasUppercase ? 'text-emerald-500' : ''}>
-                    {hasUppercase ? '✓' : '•'} Uppercase letter
-                  </span>
-                  <span className={hasNumber ? 'text-emerald-500' : ''}>
-                    {hasNumber ? '✓' : '•'} Number
-                  </span>
-                  <span className={hasSpecial ? 'text-emerald-500' : ''}>
-                    {hasSpecial ? '✓' : '•'} Special symbol
-                  </span>
                 </div>
               </div>
             )}
@@ -205,7 +190,7 @@ export const SignupPage: React.FC = () => {
           {/* Security Guarantee */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Encrypted with AWS Cognito User Pools</span>
+            <span>Secured by Firebase Authentication</span>
           </div>
         </div>
       </div>

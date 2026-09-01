@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
   CloudGallery - Production Serverless Cloud Photo Gallery Infrastructure
-  Includes Cognito, API Gateway, Lambda, S3, DynamoDB, S3 Events, Sharp Resizing, and CloudFront.
+  Integrates Firebase Authentication with AWS Serverless (API Gateway, Lambda, S3, DynamoDB, S3 Events, Sharp Resizing, and CloudFront).
 
 Parameters:
   Environment:
@@ -37,65 +37,7 @@ Globals:
 
 Resources:
   # ===================================================================
-  # 1. AUTHENTICATION: Amazon Cognito User Pool & App Client
-  # ===================================================================
-  CognitoUserPool:
-    Type: AWS::Cognito::UserPool
-    Properties:
-      UserPoolName: !Sub 'cloudgallery-user-pool-${Environment}'
-      UsernameAttributes:
-        - email
-      AutoVerifiedAttributes:
-        - email
-      Policies:
-        PasswordPolicy:
-          MinimumLength: 8
-          RequireLowercase: true
-          RequireNumbers: true
-          RequireSymbols: false
-          RequireUppercase: true
-          TemporaryPasswordValidityDays: 7
-      Schema:
-        - Name: email
-          AttributeDataType: String
-          Required: true
-          Mutable: true
-        - Name: name
-          AttributeDataType: String
-          Required: false
-          Mutable: true
-      AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: false
-      AccountRecoverySetting:
-        RecoveryMechanisms:
-          - Name: verified_email
-            Priority: 1
-
-  CognitoUserPoolClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      ClientName: !Sub 'cloudgallery-web-client-${Environment}'
-      UserPoolId: !Ref CognitoUserPool
-      GenerateSecret: false
-      ExplicitAuthFlows:
-        - ALLOW_USER_SRP_AUTH
-        - ALLOW_USER_PASSWORD_AUTH
-        - ALLOW_REFRESH_TOKEN_AUTH
-      PreventUserExistenceErrors: ENABLED
-      AllowedOAuthFlows:
-        - code
-        - implicit
-      AllowedOAuthScopes:
-        - email
-        - openid
-        - profile
-      AllowedOAuthFlowsUserPoolClient: true
-      CallbackURLs:
-        - https://localhost:3000
-        - !Sub 'https://${CloudFrontDistribution.DomainName}'
-
-  # ===================================================================
-  # 2. STORAGE: Amazon S3 Buckets (Originals & Thumbnails)
+  # 1. STORAGE: Amazon S3 Buckets (Originals & Thumbnails)
   # ===================================================================
   OriginalsBucket:
     Type: AWS::S3::Bucket
@@ -244,7 +186,7 @@ Resources:
         SSEEnabled: true
 
   # ===================================================================
-  # 5. API GATEWAY: HTTP API with Cognito JWT Authorizer & CORS
+  # 4. API GATEWAY: HTTP API & CORS (Bearer Token passed to Lambdas)
   # ===================================================================
   HttpApi:
     Type: AWS::Serverless::HttpApi
@@ -267,15 +209,6 @@ Resources:
         AllowOrigins:
           - !Ref CorsAllowedOrigin
         MaxAge: 3600
-      Auth:
-        DefaultAuthorizer: CognitoJwtAuthorizer
-        Authorizers:
-          CognitoJwtAuthorizer:
-            IdentitySource: '$request.header.Authorization'
-            JwtConfiguration:
-              audience:
-                - !Ref CognitoUserPoolClient
-              issuer: !Sub 'https://cognito-idp.${AWS::Region}.amazonaws.com/${CognitoUserPool}'
 
   # ===================================================================
   # 6. LAMBDA FUNCTIONS (LEAST PRIVILEGE IAM PERMISSIONS)
@@ -511,18 +444,6 @@ Outputs:
     Export:
       Name: !Sub '${AWS::StackName}-ApiUrl'
 
-  UserPoolId:
-    Description: Amazon Cognito User Pool ID
-    Value: !Ref CognitoUserPool
-    Export:
-      Name: !Sub '${AWS::StackName}-UserPoolId'
-
-  UserPoolClientId:
-    Description: Amazon Cognito App Client ID
-    Value: !Ref CognitoUserPoolClient
-    Export:
-      Name: !Sub '${AWS::StackName}-UserPoolClientId'
-
   OriginalBucketName:
     Description: Amazon S3 Originals Storage Bucket
     Value: !Ref OriginalsBucket
@@ -551,14 +472,6 @@ Outputs:
   ApiGatewayUrl:
     Description: Production API Gateway Endpoint URL
     Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod'
-
-  CognitoUserPoolId:
-    Description: Amazon Cognito User Pool ID
-    Value: !Ref CognitoUserPool
-
-  CognitoAppClientId:
-    Description: Amazon Cognito App Client ID
-    Value: !Ref CognitoUserPoolClient
 
   OriginalsBucketName:
     Description: Amazon S3 Originals Storage Bucket

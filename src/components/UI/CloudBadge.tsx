@@ -2,7 +2,7 @@ import React from 'react';
 import { Cloud, Zap, ShieldCheck, Database, HardDrive, Globe } from 'lucide-react';
 
 export interface CloudBadgeProps {
-  type: 's3' | 'dynamodb' | 'lambda' | 'cloudfront' | 'cognito' | 'serverless';
+  type: 's3' | 'dynamodb' | 'lambda' | 'cloudfront' | 'firebase' | 'cognito' | 'serverless';
   size?: 'sm' | 'md';
 }
 
@@ -28,8 +28,13 @@ export const CloudBadge: React.FC<CloudBadgeProps> = ({ type, size = 'sm' }) => 
       icon: Globe,
       classes: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
     },
+    firebase: {
+      label: 'Firebase Auth',
+      icon: ShieldCheck,
+      classes: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+    },
     cognito: {
-      label: 'Cognito Auth',
+      label: 'Firebase Auth',
       icon: ShieldCheck,
       classes: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
     },

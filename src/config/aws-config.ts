@@ -3,17 +3,15 @@
  * Centralizes all Cloud resource names, endpoints, and region definitions.
  */
 
+/**
+ * Cloud Infrastructure Configuration Layer
+ * Hybrid Cloud Architecture: Firebase Authentication + AWS Serverless Storage & Metadata
+ */
+
 export const AWS_CONFIG = {
   region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
-  
-  // Amazon Cognito User Pools
-  cognito: {
-    userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID || 'us-east-1_cloudgallery-prod',
-    clientId: import.meta.env.VITE_COGNITO_CLIENT_ID || 'cloudgallery-web-app-client',
-    region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
-  },
 
-  // Amazon API Gateway Endpoint (uses integrated /api by default)
+  // Amazon API Gateway Endpoint
   apiGateway: {
     baseUrl: import.meta.env.VITE_API_GATEWAY_URL || '/api',
     timeoutMs: 30000,
@@ -21,8 +19,8 @@ export const AWS_CONFIG = {
 
   // Amazon S3 Buckets
   s3: {
-    originalsBucket: 'cloudgallery-originals-prod',
-    thumbnailsBucket: 'cloudgallery-thumbnails-prod',
+    originalsBucket: import.meta.env.VITE_ORIGINALS_BUCKET || 'cloudgallery-originals-prod',
+    thumbnailsBucket: import.meta.env.VITE_THUMBNAILS_BUCKET || 'cloudgallery-thumbnails-prod',
     maxFileSizeBytes: 25 * 1024 * 1024, // 25 MB
     allowedContentTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
     presignedUrlExpirySeconds: 300, // 5 minutes
@@ -30,7 +28,7 @@ export const AWS_CONFIG = {
 
   // Amazon DynamoDB
   dynamodb: {
-    tableName: 'cloudgallery-photos-metadata',
+    tableName: import.meta.env.VITE_DYNAMODB_TABLE || 'CloudGalleryPhotos',
     primaryKey: 'userId',
     sortKey: 'photoId',
   },

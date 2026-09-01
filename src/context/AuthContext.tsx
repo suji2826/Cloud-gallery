@@ -8,8 +8,9 @@ interface AuthContextType {
   isLoading: boolean;
   login: (params: LoginParams) => Promise<void>;
   signUp: (params: SignUpParams) => Promise<void>;
-  logout: () => void;
-  refreshUser: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  logout: () => Promise<void>;
+  getIdToken: (forceRefresh?: boolean) => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,20 +19,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(() => authService.getStoredUser());
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const refreshUser = useCallback(async () => {
-    try {
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
-    } catch {
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    refreshUser();
-  }, [refreshUser]);
+    // Listen to Firebase Auth state changes
+    const unsubscribe = authService.onAuthStateChange((firebaseUser) => {
+      setUser(firebaseUser);
+      setIsLoading(false);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   const login = async (params: LoginParams) => {
     setIsLoading(true);
@@ -53,10 +51,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    authService.logout();
+  const resetPassword = async (email: string) => {
+    await authService.sendPasswordReset(email);
+  };
+
+  const logout = async () => {
+    await authService.logout();
     setUser(null);
   };
+
+  const getIdToken = useCallback((forceRefresh = false) => {
+    return authService.getIdToken(forceRefresh);
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -66,8 +72,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         signUp,
+        resetPassword,
         logout,
-        refreshUser,
+        getIdToken,
       }}
     >
       {children}

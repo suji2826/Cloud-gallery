@@ -46,16 +46,16 @@ export const CloudArchitectureModal: React.FC<{ isOpen: boolean; onClose: () => 
   const flowSteps = [
     {
       step: 1,
-      title: '1. User & Cognito Auth',
-      desc: 'Browser validates JWT Token with Amazon Cognito User Pools before any API Gateway request.',
+      title: '1. Firebase Authentication',
+      desc: 'Browser signs in with Firebase Auth and sends ID Token in Authorization header before any API request.',
       icon: ShieldCheck,
-      service: 'AWS Cognito',
+      service: 'Firebase Auth',
       color: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
     },
     {
       step: 2,
       title: '2. API Gateway & Lambda',
-      desc: 'Requests pre-signed PUT URL from Lambda function getUploadUrl using AWS SDK v3.',
+      desc: 'Validates Firebase ID token, extracts Firebase UID, and generates pre-signed S3 PUT URLs via AWS SDK v3.',
       icon: Zap,
       service: 'API Gateway + Lambda',
       color: 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400',
@@ -79,7 +79,7 @@ export const CloudArchitectureModal: React.FC<{ isOpen: boolean; onClose: () => 
     {
       step: 5,
       title: '5. DynamoDB Metadata Store',
-      desc: 'Photo record (userId, photoId, size, tags, timestamps) saved to single-table DynamoDB.',
+      desc: 'Photo record (userId as Firebase UID, photoId, size, tags, timestamps) saved to single-table DynamoDB.',
       icon: Database,
       service: 'Amazon DynamoDB',
       color: 'border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400',
@@ -194,9 +194,9 @@ export const CloudArchitectureModal: React.FC<{ isOpen: boolean; onClose: () => 
               </span>
             </div>
             <div className="px-4 py-2.5 flex items-center justify-between">
-              <span className="font-semibold text-slate-600 dark:text-slate-400">Cognito User Pool ID</span>
+              <span className="font-semibold text-slate-600 dark:text-slate-400">Authentication Service</span>
               <span className="font-mono text-slate-900 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-                {AWS_CONFIG.cognito.userPoolId}
+                Firebase Authentication (Bearer Token)
               </span>
             </div>
             <div className="px-4 py-2.5 flex items-center justify-between">

@@ -12,8 +12,8 @@ export class ApiError extends Error {
   }
 }
 
-export const TOKEN_STORAGE_KEY = 'cloudgallery_auth_token';
-export const USER_STORAGE_KEY = 'cloudgallery_user_data';
+export const TOKEN_STORAGE_KEY = 'cloudgallery_firebase_token';
+export const USER_STORAGE_KEY = 'cloudgallery_firebase_user';
 
 export async function apiRequest<T = any>(
   endpoint: string,
