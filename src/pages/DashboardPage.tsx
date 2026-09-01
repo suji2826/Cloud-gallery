@@ -142,13 +142,27 @@ export const DashboardPage: React.FC = () => {
     <div id="dashboard-page" className="space-y-8">
       {/* Welcome Greeting & Quick Actions Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Welcome back, {user?.name || 'Photographer'}
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Serverless cloud storage overview and recent photo activity.
-          </p>
+        <div className="flex items-center gap-3.5">
+          {user?.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={user.name || 'User'}
+              referrerPolicy="no-referrer"
+              className="w-12 h-12 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 shadow-xs shrink-0"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white font-bold text-lg flex items-center justify-center shadow-xs shrink-0">
+              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+            </div>
+          )}
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Welcome back, {user?.name || 'Photographer'}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              Authenticated via Google • Serverless cloud storage overview and recent activity.
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2.5">

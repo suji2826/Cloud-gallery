@@ -1,48 +1,81 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import {
   getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
   signOut,
-  sendPasswordResetEmail,
-  updateProfile,
   onAuthStateChanged,
   User as FirebaseUser,
   setPersistence,
   browserLocalPersistence,
+  Auth,
 } from 'firebase/auth';
 
 /**
- * Firebase Client Configuration Layer
- * Centralized Firebase App & Authentication setup for CloudGallery
+ * Firebase Web App Configuration
+ * Reads from Vite environment variables (VITE_FIREBASE_*) with default configuration for gallery-881c6.
  */
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyBX2LZkYNnJB_mFawfcEsodISy7j8uySV8',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'cloudgallery-387880832940.firebaseapp.com',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'cloudgallery-387880832940',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'cloudgallery-387880832940.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '387880832940',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:387880832940:web:cloudgallery',
+export const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyAJx4D-a589EoM9yhi-COIEuXhTVgOOSe0',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'gallery-881c6.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'gallery-881c6',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'gallery-881c6.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '313209083062',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:313209083062:web:67e78be129612f62240217',
 };
 
-// Initialize Firebase App singleton instance (Structure: initializeApp(firebaseConfig))
-export const firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+/**
+ * Validate configuration completeness and return any missing variable names
+ */
+export const getMissingFirebaseConfigKeys = (): string[] => {
+  const missing: string[] = [];
+  if (!firebaseConfig.apiKey) missing.push('VITE_FIREBASE_API_KEY');
+  if (!firebaseConfig.authDomain) missing.push('VITE_FIREBASE_AUTH_DOMAIN');
+  if (!firebaseConfig.projectId) missing.push('VITE_FIREBASE_PROJECT_ID');
+  if (!firebaseConfig.storageBucket) missing.push('VITE_FIREBASE_STORAGE_BUCKET');
+  if (!firebaseConfig.messagingSenderId) missing.push('VITE_FIREBASE_MESSAGING_SENDER_ID');
+  if (!firebaseConfig.appId) missing.push('VITE_FIREBASE_APP_ID');
+  return missing;
+};
 
-// Initialize Firebase Authentication using the centralized app instance (Structure: getAuth(firebaseApp))
-export const auth = getAuth(firebaseApp);
+/**
+ * Check if the Firebase configuration is present and valid
+ */
+export const isFirebaseConfigured = (): boolean => {
+  return getMissingFirebaseConfigKeys().length === 0;
+};
 
-// Configure local session persistence
-setPersistence(auth, browserLocalPersistence).catch((err) => {
-  console.warn('Firebase persistence warning:', err);
+let appInstance: FirebaseApp;
+let authInstance: Auth;
+
+// Initialize Firebase App instance singleton once
+if (getApps().length > 0) {
+  appInstance = getApp();
+  authInstance = getAuth(appInstance);
+} else {
+  appInstance = initializeApp(firebaseConfig);
+  authInstance = getAuth(appInstance);
+  // Configure local session persistence
+  setPersistence(authInstance, browserLocalPersistence).catch((err) => {
+    if (import.meta.env.DEV) {
+      console.warn('Firebase session persistence notice:', err);
+    }
+  });
+}
+
+export const firebaseApp = appInstance;
+export const auth = authInstance;
+
+// Google Authentication Provider setup
+export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account',
 });
 
 export {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
   signOut,
-  sendPasswordResetEmail,
-  updateProfile,
   onAuthStateChanged,
 };
 export type { FirebaseUser };
-

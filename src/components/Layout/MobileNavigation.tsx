@@ -36,8 +36,8 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
     { label: 'Settings', path: '/settings', icon: Settings },
   ];
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     onClose();
     navigate('/login');
   };
@@ -95,7 +95,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                         isActive
-                          ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300'
+                          ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 font-semibold'
                           : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white'
                       }`
                     }
@@ -124,24 +124,33 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
             {/* User Details & Sign Out */}
             <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center">
-                  {user?.name ? user.name.slice(0, 2).toUpperCase() : 'JD'}
-                </div>
+                {user?.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.name || 'User'}
+                    referrerPolicy="no-referrer"
+                    className="w-10 h-10 rounded-full object-cover shrink-0 border border-slate-200 dark:border-slate-700"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm shrink-0">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                    {user?.name || 'John Doe'}
+                    {user?.name || 'Cloud User'}
                   </p>
-                  <p className="text-xs text-slate-400 truncate">{user?.email || 'user@aws.com'}</p>
+                  <p className="text-xs text-slate-400 truncate">{user?.email || 'Google Account'}</p>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-rose-600 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-rose-600 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 transition-colors cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Sign Out</span>
+                <span>Logout</span>
               </button>
             </div>
           </motion.div>

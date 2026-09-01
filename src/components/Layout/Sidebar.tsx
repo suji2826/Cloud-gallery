@@ -8,11 +8,7 @@ import {
   Settings,
   LogOut,
   Layers,
-  Database,
-  Shield,
-  HardDrive,
   CloudLightning,
-  UserCheck,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { StorageStats } from '../../types';
@@ -40,8 +36,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Settings', path: '/settings', icon: Settings },
   ];
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
@@ -75,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className={({ isActive }) =>
                 `flex items-center px-4 py-3 rounded-xl font-medium text-sm transition-colors ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300'
+                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 font-semibold'
                     : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:text-slate-800 dark:hover:text-slate-200'
                 }`
               }
@@ -91,12 +87,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           );
         })}
 
-        {/* AWS Architecture Trigger */}
+        {/* Cloud Inspector Trigger */}
         <div className="pt-4">
           <button
             type="button"
             onClick={onOpenCloudInspector}
-            className="w-full flex items-center px-4 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/80 rounded-xl transition-colors text-left group"
+            className="w-full flex items-center px-4 py-2.5 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/80 rounded-xl transition-colors text-left group cursor-pointer"
           >
             <Layers className="w-5 h-5 mr-3 text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform shrink-0" />
             <div className="flex-1 min-w-0">
@@ -128,23 +124,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* User Card & Logout */}
-        <div className="flex items-center gap-3 p-2">
-          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold shrink-0">
-            {user?.name ? user.name.slice(0, 2).toUpperCase() : 'JD'}
-          </div>
+        <div className="flex items-center gap-3 p-2 bg-slate-50/70 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800">
+          {user?.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={user.name || 'User'}
+              referrerPolicy="no-referrer"
+              className="w-9 h-9 rounded-full object-cover shrink-0 border border-slate-200 dark:border-slate-700 shadow-xs"
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-xs">
+              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate text-slate-900 dark:text-white">
-              {user?.name || 'John Doe'}
+            <p className="text-xs font-bold truncate text-slate-900 dark:text-white">
+              {user?.name || 'Cloud User'}
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-              {user?.email || 'intern.jdoe@aws.com'}
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              {user?.email || 'Google Account'}
             </p>
           </div>
           <button
             type="button"
             onClick={handleLogout}
-            title="Sign Out"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+            title="Logout"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
           </button>

@@ -1,153 +1,166 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { CloudLightning, Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
-import { Input } from '../components/UI/Input';
-import { Button } from '../components/UI/Button';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { CloudLightning, ShieldCheck, AlertCircle, Loader2, Key } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
-export const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+export const GoogleIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
+  <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fill="#4285F4"
+      d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+    />
+    <path
+      fill="#34A853"
+      d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.35 24 12 24z"
+    />
+    <path
+      fill="#FBBC05"
+      d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+    />
+    <path
+      fill="#EA4335"
+      d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+    />
+  </svg>
+);
 
-  const { login } = useAuth();
+export const LoginPage: React.FC = () => {
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const { signInWithGoogle, isAuthenticated, isConfigured, missingConfigKeys } = useAuth();
   const { success, error } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = (location.state as any)?.from?.pathname || '/dashboard';
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      setErrorMsg('Please enter both email and password.');
-      return;
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
     }
+  }, [isAuthenticated, navigate, from]);
 
-    setIsLoading(true);
-    setErrorMsg('');
+  const handleGoogleSignIn = async () => {
+    if (isSigningIn) return;
+
+    setIsSigningIn(true);
+    setErrorMessage('');
 
     try {
-      await login({ email, password, rememberMe });
-      success('Welcome back!', 'Successfully signed in to CloudGallery.');
+      await signInWithGoogle();
+      success('Welcome to CloudGallery!', 'Successfully authenticated with Google.');
       navigate(from, { replace: true });
     } catch (err: any) {
-      const msg = err.message || 'Login failed. Please check your credentials.';
-      setErrorMsg(msg);
+      const msg = err.message || 'Unable to sign in. Please try again.';
+      setErrorMessage(msg);
       error('Authentication Error', msg);
     } finally {
-      setIsLoading(false);
+      setIsSigningIn(false);
     }
-  };
-
-  const handleQuickDemoFill = () => {
-    setEmail('demo.user@cloudgallery.io');
-    setPassword('DemoPass123!');
   };
 
   return (
-    <div id="login-page" className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div
+      id="login-page"
+      className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8"
+    >
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center px-4">
-        <Link to="/" className="inline-flex items-center gap-2.5 mb-4 group">
-          <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
-            <CloudLightning className="w-5 h-5" />
+        {/* Brand Icon & Link */}
+        <Link to="/" className="inline-flex items-center gap-2.5 mb-6 group">
+          <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-transform">
+            <CloudLightning className="w-6 h-6" />
           </div>
-          <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">
+          <span className="font-extrabold text-2xl tracking-tight text-slate-900 dark:text-white">
             CloudGallery
           </span>
         </Link>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Sign in to your account
-        </h2>
-        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-          Don&apos;t have an account?{' '}
-          <Link
-            to="/signup"
-            className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            Create an account
-          </Link>
+
+        {/* Title & Subtitle */}
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Welcome to CloudGallery
+        </h1>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 max-w-sm mx-auto">
+          Securely store and manage your memories in the cloud.
         </p>
       </div>
 
-      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="bg-white dark:bg-slate-900 py-8 px-6 sm:px-8 shadow-sm rounded-2xl border border-slate-200 dark:border-slate-800 space-y-5">
-          {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-600 dark:text-rose-400">
-              {errorMsg}
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
+        <div className="bg-white dark:bg-slate-900 py-8 px-6 sm:px-10 shadow-sm rounded-2xl border border-slate-200 dark:border-slate-800 space-y-6">
+          {/* Missing Configuration Notice */}
+          {!isConfigured && missingConfigKeys.length > 0 && (
+            <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 space-y-2">
+              <div className="flex items-center gap-2 font-bold">
+                <Key className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                <span>Missing Firebase Environment Variables</span>
+              </div>
+              <p className="leading-relaxed">
+                The following required environment variables are missing from your configuration:
+              </p>
+              <ul className="list-disc list-inside font-mono text-[11px] space-y-0.5">
+                {missingConfigKeys.map((key) => (
+                  <li key={key} className="font-bold text-amber-900 dark:text-amber-200">
+                    {key}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Email Address"
-              type="email"
-              placeholder="user@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              leftIcon={<Mail className="w-4 h-4" />}
-              required
-            />
-
-            <Input
-              label="Password"
-              type="password"
-              showPasswordToggle
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              leftIcon={<Lock className="w-4 h-4" />}
-              required
-            />
-
-            <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
-                />
-                <span className="text-slate-600 dark:text-slate-400">Remember me</span>
-              </label>
-
-              <Link
-                to="/forgot-password"
-                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                Forgot password?
-              </Link>
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-600 dark:text-rose-400 flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+              <span>{errorMessage}</span>
             </div>
+          )}
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              className="w-full"
-              isLoading={isLoading}
-              rightIcon={<ArrowRight className="w-4 h-4" />}
+          {/* Primary Action: Continue with Google */}
+          <div className="space-y-4">
+            <button
+              id="google-signin-btn"
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={isSigningIn}
+              className="w-full h-12 flex items-center justify-center gap-3 px-4 py-3 border border-slate-300 dark:border-slate-700 rounded-xl shadow-xs bg-white dark:bg-slate-800 text-sm font-bold text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed active:scale-99"
             >
-              Sign In
-            </Button>
+              {isSigningIn ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin text-blue-600 dark:text-blue-400" />
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <>
+                  <GoogleIcon className="w-5 h-5 shrink-0" />
+                  <span>Continue with Google</span>
+                </>
+              )}
+            </button>
 
-            <div className="pt-1 text-center">
-              <button
-                type="button"
-                onClick={handleQuickDemoFill}
-                className="text-xs text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer underline underline-offset-2"
+            <p className="text-center text-xs text-slate-500 dark:text-slate-400 leading-normal">
+              Your photos are securely stored using cloud infrastructure.
+            </p>
+          </div>
+
+          {/* New to CloudGallery prompt */}
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              New to CloudGallery?{' '}
+              <Link
+                to="/signup"
+                className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
               >
-                Auto-fill demo credentials
-              </button>
-            </div>
-          </form>
+                Learn more & get started
+              </Link>
+            </p>
+          </div>
 
-          {/* Security Badge */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+          {/* Security Guarantee */}
+          <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Secured by Firebase Authentication</span>
+            <span>Secured with Firebase Auth & AWS Serverless</span>
           </div>
         </div>
       </div>

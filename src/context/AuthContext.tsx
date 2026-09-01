@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { User } from '../types';
-import { authService, LoginParams, SignUpParams } from '../services/authService';
+import { authService } from '../services/authService';
+import { isFirebaseConfigured, getMissingFirebaseConfigKeys } from '../lib/firebase';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (params: LoginParams) => Promise<void>;
-  signUp: (params: SignUpParams) => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
+  isConfigured: boolean;
+  missingConfigKeys: string[];
+  signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   getIdToken: (forceRefresh?: boolean) => Promise<string | null>;
 }
@@ -18,6 +19,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => authService.getStoredUser());
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isConfigured] = useState<boolean>(() => isFirebaseConfigured());
+  const [missingConfigKeys] = useState<string[]>(() => getMissingFirebaseConfigKeys());
 
   useEffect(() => {
     // Listen to Firebase Auth state changes
@@ -31,28 +34,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const login = async (params: LoginParams) => {
+  const signInWithGoogle = async () => {
     setIsLoading(true);
     try {
-      const res = await authService.login(params);
+      const res = await authService.signInWithGoogle();
       setUser(res.user);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const signUp = async (params: SignUpParams) => {
-    setIsLoading(true);
-    try {
-      const res = await authService.signUp(params);
-      setUser(res.user);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const resetPassword = async (email: string) => {
-    await authService.sendPasswordReset(email);
   };
 
   const logout = async () => {
@@ -70,9 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         isAuthenticated: !!user,
         isLoading,
-        login,
-        signUp,
-        resetPassword,
+        isConfigured,
+        missingConfigKeys,
+        signInWithGoogle,
         logout,
         getIdToken,
       }}
